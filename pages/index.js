@@ -229,7 +229,7 @@ export default function Home() {
               href="mailto:fahmie@example.com"
               className="text-sm text-gray-400 hover:text-gray-200"
             >
-              Or email me directly: fahmie@example.com
+              Or email me directly: mfahmiebasri@gmail.com
             </Link>
           </div>
         </div>
