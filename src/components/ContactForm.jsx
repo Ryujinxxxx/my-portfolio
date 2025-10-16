@@ -1,46 +1,99 @@
-import React, { useState } from "react";
-import emailjs from "@emailjs/browser";
-
-const SERVICE_ID = "service_xna84q5";
-const TEMPLATE_TO_ME = "template_to_me_v4";
-const TEMPLATE_REPLY = "template_auto_reply_v4";
-const PUBLIC_KEY = "kPQtDDETESjIlwS93";
+import { useState } from "react";
 
 export default function ContactForm() {
-  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
-  const [status, setStatus] = useState("");
-
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState("idle"); // idle | sending | success | error
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus("Sending...");
+    setErrorMessage("");
 
-    const templateParams = {
-      from_name: formData.name,
-      from_email: formData.email,
-      message: formData.message,
-      sent_date: new Date().toLocaleString(),
-    };
+    if (!email || !message) {
+      setErrorMessage("Please include your email and a short message.");
+      return;
+    }
+
+    setStatus("sending");
 
     try {
-      await emailjs.send(SERVICE_ID, TEMPLATE_TO_ME, templateParams, PUBLIC_KEY);
-      await emailjs.send(SERVICE_ID, TEMPLATE_REPLY, templateParams, PUBLIC_KEY);
-      setStatus("✅ Message sent successfully!");
-    } catch (error) {
-      console.error("❌ Email send failed:", error);
-      setStatus("Failed to send message. Try again later.");
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, message }),
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        setErrorMessage(errJson?.error || "Failed to send message. Try again later.");
+        setStatus("error");
+        return;
+      }
+
+      setStatus("success");
+      setName("");
+      setEmail("");
+      setMessage("");
+    } catch (err) {
+      console.error("Contact submit error:", err);
+      setErrorMessage("Network error. Please try again.");
+      setStatus("error");
+    } finally {
+      // Optional: return to idle after a short delay
+      setTimeout(() => setStatus("idle"), 3500);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="contact-form">
-      <input type="text" name="name" placeholder="Your Name" value={formData.name} onChange={handleChange} required />
-      <input type="email" name="email" placeholder="Your Email" value={formData.email} onChange={handleChange} required />
-      <textarea name="message" placeholder="Your Message" value={formData.message} onChange={handleChange} required />
-      <button type="submit">Send Message</button>
-      <p>{status}</p>
+    <form onSubmit={handleSubmit} className="bg-gray-800 p-6 rounded-lg shadow-md">
+      <label className="block text-sm text-gray-300 mb-2">
+        Name
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="mt-1 w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm text-white"
+          placeholder="Your name (optional)"
+        />
+      </label>
+
+      <label className="block text-sm text-gray-300 mb-2">
+        Email *
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="mt-1 w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm text-white"
+          placeholder="you@example.com"
+          required
+        />
+      </label>
+
+      <label className="block text-sm text-gray-300 mb-4">
+        Message *
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          className="mt-1 w-full bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm text-white min-h-[110px]"
+          placeholder="How can I help?"
+          required
+        />
+      </label>
+
+      {errorMessage && <p className="text-sm text-red-400 mb-3">{errorMessage}</p>}
+
+      <div className="text-right">
+        <button
+          type="submit"
+          disabled={status === "sending"}
+          className={`inline-flex items-center gap-2 ${
+            status === "sending" ? "bg-blue-500" : "bg-blue-600 hover:bg-blue-700"
+          } text-white font-semibold py-2 px-4 rounded-md transition`}
+        >
+          {status === "sending" ? "Sending..." : status === "success" ? "Sent ✓" : "Send Message"}
+        </button>
+      </div>
     </form>
   );
 }

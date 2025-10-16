@@ -1,4 +1,4 @@
-import ContactForm from "../src/components/ContactForm";
+import ContactForm from "../components/ContactForm";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -85,7 +85,7 @@ export default function Home() {
           transition={{ duration: 1.8 }}
           className="absolute inset-0"
           style={{
-            backgroundImage: "url('/banner.webp')",
+            backgroundImage: "url('/banner.jpg')",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
