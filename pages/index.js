@@ -1,3 +1,6 @@
+import { db } from "../lib/firebase";
+console.log("✅ Firebase Firestore connected:", !!db);
+import ContactForm from "../src/components/ContactForm";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
